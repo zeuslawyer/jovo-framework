@@ -3,9 +3,10 @@ import _zip = require('lodash.zip');
 
 import { SpeechBuilder } from 'jovo-core';
 import { GoogleAction } from './GoogleAction';
+import { ConversationalAction } from '../conversational-actions/core/ConversationalAction';
 
 export class GoogleActionSpeechBuilder extends SpeechBuilder {
-  constructor(googleAction: GoogleAction) {
+  constructor(googleAction: GoogleAction | ConversationalAction) {
     super(googleAction);
   }
 

@@ -28,10 +28,11 @@ import { NewSurface } from './modules/NewSurface';
 
 import { TransactionsPlugin } from './modules/Transaction';
 import { UpdatesPlugin } from './modules/Updates';
+import { ConversationalActionsCore } from './conversational-actions/ConversationalActionsCore';
 
 export interface Config extends ExtensibleConfig {
   handlers?: any; //tslint:disable-line
-
+  conversationalActions?: boolean;
   transactions?: {
     androidPackageName?: string;
     keyFile?: object;
@@ -41,6 +42,7 @@ export interface Config extends ExtensibleConfig {
 export class GoogleAssistant extends Platform<GoogleActionRequest, GoogleActionResponse> {
   config: Config = {
     enabled: true,
+    conversationalActions: false,
     plugin: {},
   };
 
@@ -66,16 +68,6 @@ export class GoogleAssistant extends Platform<GoogleActionRequest, GoogleActionR
     app.middleware('platform.nlu')!.use(this.nlu.bind(this));
     app.middleware('platform.output')!.use(this.output.bind(this));
     app.middleware('response')!.use(this.response.bind(this));
-    this.use(
-      new GoogleAssistantCore(),
-      new Cards(),
-      new AskFor(),
-      new MediaResponsePlugin(),
-      new UpdatesPlugin(),
-      new TransactionsPlugin(),
-      new InteractiveCanvas(),
-      new NewSurface(),
-    );
 
     Jovo.prototype.$googleAction = undefined;
 
@@ -116,10 +108,29 @@ export class GoogleAssistant extends Platform<GoogleActionRequest, GoogleActionR
       }
       return this;
     };
-
-    this.initDialogflow();
+    if (this.config.conversationalActions) {
+      this.setupConversationActions();
+    } else {
+      this.setupClassicActions();
+    }
   }
 
+  setupClassicActions() {
+    this.use(
+      new GoogleAssistantCore(),
+      new Cards(),
+      new AskFor(),
+      new MediaResponsePlugin(),
+      new UpdatesPlugin(),
+      new TransactionsPlugin(),
+      new InteractiveCanvas(),
+      new NewSurface(),
+    );
+    this.initDialogflow();
+  }
+  setupConversationActions() {
+    this.use(new ConversationalActionsCore());
+  }
   makeTestSuite(): GoogleAssistantTestSuite {
     this.remove('DialogflowPlugin');
     this.initDialogflow();
@@ -133,7 +144,7 @@ export class GoogleAssistant extends Platform<GoogleActionRequest, GoogleActionR
   async initialize(handleRequest: HandleRequest) {
     await this.middleware('$init')!.run(handleRequest);
 
-    if (!handleRequest.jovo || handleRequest.jovo.constructor.name !== 'GoogleAction') {
+    if (!isValidGoogleAssistantRequest(handleRequest)) {
       return Promise.resolve();
     }
 
@@ -152,7 +163,7 @@ export class GoogleAssistant extends Platform<GoogleActionRequest, GoogleActionR
   }
 
   async nlu(handleRequest: HandleRequest) {
-    if (!handleRequest.jovo || handleRequest.jovo.constructor.name !== 'GoogleAction') {
+    if (!isValidGoogleAssistantRequest(handleRequest)) {
       return Promise.resolve();
     }
 
@@ -161,23 +172,34 @@ export class GoogleAssistant extends Platform<GoogleActionRequest, GoogleActionR
   }
 
   async output(handleRequest: HandleRequest) {
-    if (!handleRequest.jovo || handleRequest.jovo.constructor.name !== 'GoogleAction') {
+    if (!isValidGoogleAssistantRequest(handleRequest)) {
       return Promise.resolve();
     }
     await this.middleware('$output')!.run(handleRequest.jovo);
   }
 
   async response(handleRequest: HandleRequest) {
-    if (!handleRequest.jovo || handleRequest.jovo.constructor.name !== 'GoogleAction') {
+    if (!isValidGoogleAssistantRequest(handleRequest)) {
       return Promise.resolve();
     }
     await this.middleware('$response')!.run(handleRequest.jovo);
 
-    handleRequest.jovo.$response = handleRequest.jovo.$rawResponseJson
-      ? this.responseBuilder.create(handleRequest.jovo.$rawResponseJson)
-      : handleRequest.jovo.$response;
-    await handleRequest.host.setResponse(handleRequest.jovo.$response);
+    console.log('res');
+    console.log(handleRequest.jovo!.$response);
+
+    handleRequest.jovo!.$response = handleRequest.jovo!.$rawResponseJson
+      ? this.responseBuilder.create(handleRequest.jovo!.$rawResponseJson)
+      : handleRequest.jovo!.$response;
+    await handleRequest.host.setResponse(handleRequest.jovo!.$response);
   }
 
   uninstall(app: BaseApp) {}
+}
+
+function isValidGoogleAssistantRequest(handleRequest: HandleRequest) {
+  return (
+    handleRequest.jovo &&
+    (handleRequest.jovo.constructor.name === 'GoogleAction' ||
+      handleRequest.jovo.constructor.name === 'ConversationalAction')
+  );
 }

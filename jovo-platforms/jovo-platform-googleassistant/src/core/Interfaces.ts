@@ -362,6 +362,7 @@ export type ErrorType =
   | 'REQUIREMENTS_NOT_MET'
   | 'TOO_LATE'
   | 'NO_CAPACITY'
+  | 'NO_COURIER_AVAILABLE'
   | 'INELIGIBLE'
   | 'OUT_OF_SERVICE_AREA'
   | 'CLOSED'
@@ -372,7 +373,10 @@ export type ErrorType =
   | 'PROMO_ORDER_INELIGIBLE'
   | 'UNAVAILABLE_SLOT'
   | 'FAILED_PRECONDITION'
-  | 'PAYMENT_DECLINED';
+  | 'PAYMENT_DECLINED'
+  | 'MERCHANT_UNREACHABLE'
+  | 'ACCOUNT_LINKING_FAILED';
+
 export interface PurchaseError {
   type: ErrorType;
   description: string;

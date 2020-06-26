@@ -1,8 +1,6 @@
 import { Config } from './GoogleAssistant';
 
 export { GoogleAssistant, Config } from './GoogleAssistant';
-export { GoogleAction } from './core/GoogleAction';
-
 export { GoogleAssistantTestSuite } from './core/Interfaces';
 export { BasicCard } from './response/BasicCard';
 export { Carousel } from './response/Carousel';
@@ -14,6 +12,7 @@ export { Table } from './response/Table';
 export { List } from './response/List';
 export { NotificationObject, NotificationPlugin } from './modules/Notification';
 export { GoogleActionSpeechBuilder } from './core/GoogleActionSpeechBuilder';
+import { ConversationalAction } from './conversational-actions/core/ConversationalAction';
 
 import { Device } from './modules/AskFor';
 import { BasicCard } from './response/BasicCard';
@@ -26,7 +25,7 @@ import { Updates } from './modules/Updates';
 import { OrderUpdateV3, RichResponse } from './core/Interfaces';
 
 import { GoogleAction } from './core/GoogleAction';
-import { Handler } from 'jovo-core';
+import { AskOutput, Handler, TellOutput } from 'jovo-core';
 import { Transaction, PaymentOptions, OrderUpdate, OrderOptions } from './modules/Transaction';
 import { Notification } from './modules/Notification';
 
@@ -67,6 +66,25 @@ declare module 'jovo-core/dist/src/core/Jovo' {
      * @return {boolean} isGoogleAction
      */
     isGoogleAction(): boolean;
+  }
+}
+
+declare module 'jovo-core/dist/src/core/Jovo' {
+  interface Jovo {
+    $conversationalAction?: ConversationalAction;
+
+    /**
+     * Returns googleAction instance
+     * @returns {GoogleAction}
+     */
+    conversationalAction(): ConversationalAction;
+
+    /**
+     * Type of platform is Google Action
+     * @public
+     * @return {boolean} isGoogleAction
+     */
+    isConversationalAction(): boolean;
   }
 }
 
@@ -391,6 +409,9 @@ export interface AppGoogleAssistantConfig {
 declare module 'jovo-core/dist/src/Interfaces' {
   interface Output {
     GoogleAssistant: {
+      tell?: TellOutput;
+      ask?: AskOutput;
+
       AskForPermission?: {
         permissions: string[];
         optContext: string;
