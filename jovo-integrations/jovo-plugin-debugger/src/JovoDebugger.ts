@@ -376,7 +376,15 @@ export class JovoDebugger implements Plugin {
 
     // tslint:disable-next-line
     console.log = function (message) {
-      const nMessage = typeof message !== 'string' ? JSON.stringify(message) : message;
+      let nMessage = typeof message !== 'string' ? JSON.stringify(message) : message;
+
+      if (nMessage) {
+        nMessage = nMessage.replace(
+          /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g,
+          '',
+        );
+      }
+
       socket.emit('console.log', nMessage, new Error().stack!.toString());
       // @ts-ignore
       oldConsoleLog.apply(console, arguments); // eslint-disable-line
