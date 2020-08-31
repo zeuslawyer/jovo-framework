@@ -28,7 +28,6 @@ import { NewSurface } from './modules/NewSurface';
 
 import { TransactionsPlugin } from './modules/Transaction';
 import { UpdatesPlugin } from './modules/Updates';
-import { ConversationalActionsCore } from './conversational-actions/ConversationalActionsCore';
 
 export interface Config extends ExtensibleConfig {
   handlers?: any; //tslint:disable-line
@@ -108,14 +107,6 @@ export class GoogleAssistant extends Platform<GoogleActionRequest, GoogleActionR
       }
       return this;
     };
-    if (this.config.conversationalActions) {
-      this.setupConversationActions();
-    } else {
-      this.setupClassicActions();
-    }
-  }
-
-  setupClassicActions() {
     this.use(
       new GoogleAssistantCore(),
       new Cards(),
@@ -128,9 +119,7 @@ export class GoogleAssistant extends Platform<GoogleActionRequest, GoogleActionR
     );
     this.initDialogflow();
   }
-  setupConversationActions() {
-    this.use(new ConversationalActionsCore());
-  }
+
   makeTestSuite(): GoogleAssistantTestSuite {
     this.remove('DialogflowPlugin');
     this.initDialogflow();

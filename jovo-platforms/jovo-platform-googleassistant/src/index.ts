@@ -511,3 +511,4 @@ declare module 'jovo-core/dist/src/Interfaces' {
   export interface AppPlatformConfig extends AppGoogleAssistantConfig {}
   export interface ExtensiblePluginConfigs extends AppGoogleAssistantConfig {}
 }
+
